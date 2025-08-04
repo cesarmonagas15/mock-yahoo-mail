@@ -18,7 +18,8 @@ interface EmailListProps {
   onEmailClick: (email: Email) => void;
 }
 
-const validLabels = ['Priority', 'Offers', 'Updates', 'Newsletters', 'Social'];
+const validLabels = ['Prioridad', 'Ofertas', 'Actualizaciones', 'Boletines', 'Social', 'Noticias'];
+
 
 const EmailList: React.FC<EmailListProps> = ({ emails, onEmailClick }) => {
   const [markingAsRead, setMarkingAsRead] = useState<string | null>(null);
@@ -86,6 +87,7 @@ const EmailList: React.FC<EmailListProps> = ({ emails, onEmailClick }) => {
       document.removeEventListener('click', handleClickOutside);
     };
   }, [contextMenu]);
+  console.log('📬 Rendering EmailList with:', emails.map(e => [e.subject, e.newLabel]));
 
   return (
     <div className="email-list">

@@ -19,7 +19,8 @@ interface EmailStore {
   markAsUnread: (emailId: string) => void;
   getEmail: (emailId: string) => Email | undefined;
   setEmails: (emails: Email[]) => void;
-  setLabel: (emailId: string, label: string) => void; // 🔥 new
+  setLabel: (emailId: string, label: string) => void; 
+  clearLabels: () => void;
 }
 
 export const useEmailStore = create<EmailStore>()(
@@ -47,10 +48,21 @@ export const useEmailStore = create<EmailStore>()(
         return get().emails.find(email => email.id === emailId);
       },
 
-      setEmails: (emails: Email[]) => {
-        set({ emails });
+      setEmails: (updatedEmails: Email[]) => {
+        set((state) => {
+          return {
+            emails: state.emails.map((email) => {
+              const updated = updatedEmails.find((e) => e.id === email.id);
+              return updated ? { ...email, ...updated } : email;
+            }),
+          };
+        });
       },
-
+      clearLabels: () => {
+        set((state) => ({
+          emails: state.emails.map(email => ({ ...email, newLabel: '' }))
+        }));
+      },
       setLabel: (emailId: string, label: string) => {
         set((state) => ({
           emails: state.emails.map(email =>

@@ -12,12 +12,13 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import EmailList from './components/EmailList';
 import EmailDetail from './components/EmailDetail';
+import LoadingModal from './components/LoadingModal';
 import { Email, useEmailStore } from './store/emailStore';
 import './index.css';
 
 function App() {
   const [activeSection, setActiveSection] = useState('inbox');
-  const { emails, markAsRead, setEmails } = useEmailStore();
+  const { emails, markAsRead, setEmails, clearLabels } = useEmailStore();
 
   // Load emails on initial render
   useEffect(() => {
@@ -31,12 +32,12 @@ function App() {
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   // Trigger LLM-based classification and update state with throttling
+  const [isLoading, setIsLoading] = useState(false);
   const handleClassifyEmails = async () => {
+    setIsLoading(true);
     try {
-      const classified: Email[] = [];
-
-      for (const email of emails) {
-        try {
+      const classified = await Promise.all(
+        emails.map(async (email) => {
           const response = await fetch('http://localhost:4000/api/classify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -44,23 +45,21 @@ function App() {
           });
 
           const data = await response.json();
-          const label = data.label;
-          classified.push({ ...email, newLabel: label });
-
-          // Wait 250ms between requests to avoid rate limit
-          await delay(250);
-        } catch (err) {
-          console.error(`❌ Error classifying email ${email.id}:`, err);
-          classified.push(email); // fallback to original if error
-        }
-      }
+          return { ...email, newLabel: data.label };
+        })
+      );
 
       setEmails(classified);
-      console.log('✅ Emails classified and updated');
+      console.log('✅ Updated email list:', classified.map(e => [e.subject, e.newLabel]));
+
     } catch (err) {
-      console.error('❌ Error in classification process:', err);
+      console.error('❌ Error classifying emails:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  
 
   return (
     <Router>
@@ -70,7 +69,11 @@ function App() {
           onSectionChange={setActiveSection}
         />
         <div className="main-content">
-          <Header onClassifyEmails={handleClassifyEmails} />
+        {isLoading && <LoadingModal />}
+          <Header 
+            onClassifyEmails={handleClassifyEmails} 
+            onClearLabels={clearLabels}
+            />
           <Routes>
             <Route path="/" element={<Navigate to="/inbox" replace />} />
             <Route

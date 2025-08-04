@@ -8,9 +8,10 @@ import {
 
 interface HeaderProps {
   onClassifyEmails: () => void;
+  onClearLabels: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onClassifyEmails }) => {
+const Header: React.FC<HeaderProps> = ({ onClassifyEmails, onClearLabels }) => {
   return (
     <div className="top-bar">
       <div className="top-bar-left">
@@ -32,6 +33,10 @@ const Header: React.FC<HeaderProps> = ({ onClassifyEmails }) => {
         <button className="classify-button" onClick={onClassifyEmails}>
           🧠 Clasificar
         </button>
+        <button className="clear-button" onClick={onClearLabels}>
+          🧹 Borrar etiquetas
+        </button>
+
 
         <div className="top-bar-icon" title="Búsqueda avanzada">
           <Search size={20} />
